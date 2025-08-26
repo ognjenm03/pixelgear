@@ -1,0 +1,171 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model User {
+  id    String   @id @default(cuid())
+  name  String?
+  email String?  @unique
+  role  UserRole @default(USER)
+
+  accounts Account[]
+  sessions Session[]
+  orders   Order[]
+  reviews  Review[]
+  cart     Cart?
+  comments  ProductComment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                String @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  user              User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Brand {
+  id       String    @id @default(cuid())
+  name     String
+  slug     String    @unique
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String
+  slug     String    @unique
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Product {
+  id         String        @id @default(cuid())
+  name       String
+  slug       String        @unique
+  price      Float
+  stock      Int           @default(0)
+  status     PublishStatus @default(PUBLISHED)
+  brandId    String
+  categoryId String
+  imageUrl   String?
+
+  brand      Brand       @relation(fields: [brandId], references: [id])
+  category   Category    @relation(fields: [categoryId], references: [id])
+  reviews    Review[]
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+  comments   ProductComment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Review {
+  id        String @id @default(cuid())
+  rating    Int
+  body      String
+  userId    String
+  productId String
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Cart {
+  id     String     @id @default(cuid())
+  userId String     @unique
+  items  CartItem[]
+  user   User       @relation(fields: [userId], references: [id])
+}
+
+model CartItem {
+  id        String @id @default(cuid())
+  cartId    String
+  productId String
+  quantity  Int    @default(1)
+
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([cartId, productId])
+}
+
+model Order {
+  id     String      @id @default(cuid())
+  userId String
+  status OrderStatus @default(PENDING)
+  total  Float
+  user   User        @relation(fields: [userId], references: [id])
+  items  OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int    @default(1)
+  unitPrice Float
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model ProductComment {
+  id        String   @id @default(cuid())
+  productId String
+  userId    String
+  body      String
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+}
