@@ -10,6 +10,7 @@
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
     "@prisma/client": "^6.14.0",
+    "bootstrap": "^5.3.8",
     "cloudinary": "^2.7.0",
     "next": "15.5.0",
     "next-auth": "^4.24.11",

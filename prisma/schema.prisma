@@ -7,8 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// =============================
+// Enums
+// =============================
 enum UserRole {
-  USER
+  CUSTOMER
   ADMIN
 }
 
@@ -25,17 +28,20 @@ enum PublishStatus {
   PUBLISHED
 }
 
+// =============================
+// User & Auth Tables
+// =============================
 model User {
-  id    String   @id @default(cuid())
-  name  String?
-  email String?  @unique
-  role  UserRole @default(USER)
+  id        Int       @id @default(autoincrement())
+  name      String?
+  email     String?   @unique
+  role      UserRole  @default(CUSTOMER)
 
-  accounts Account[]
-  sessions Session[]
-  orders   Order[]
-  reviews  Review[]
-  cart     Cart?
+  accounts  Account[]
+  sessions  Session[]
+  orders    Order[]
+  reviews   Review[]
+  cart      Cart?
   comments  ProductComment[]
 
   createdAt DateTime @default(now())
@@ -43,8 +49,8 @@ model User {
 }
 
 model Account {
-  id                String @id @default(cuid())
-  userId            String
+  id                Int    @id @default(autoincrement())
+  userId            Int
   type              String
   provider          String
   providerAccountId String
@@ -54,42 +60,45 @@ model Account {
 }
 
 model Session {
-  id           String   @id @default(cuid())
+  id           Int      @id @default(autoincrement())
   sessionToken String   @unique
-  userId       String
+  userId       Int
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// =============================
+// Catalog
+// =============================
 model Brand {
-  id       String    @id @default(cuid())
-  name     String
-  slug     String    @unique
-  products Product[]
+  id        Int       @id @default(autoincrement())
+  name      String
+  slug      String    @unique
+  products  Product[]
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  updatedAt DateTime @updatedAt
 }
 
 model Category {
-  id       String    @id @default(cuid())
-  name     String
-  slug     String    @unique
-  products Product[]
+  id        Int       @id @default(autoincrement())
+  name      String
+  slug      String    @unique
+  products  Product[]
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  updatedAt DateTime @updatedAt
 }
 
 model Product {
-  id         String        @id @default(cuid())
+  id         Int        @id @default(autoincrement())
   name       String
-  slug       String        @unique
+  slug       String     @unique
   price      Float
-  stock      Int           @default(0)
+  stock      Int        @default(0)
   status     PublishStatus @default(PUBLISHED)
-  brandId    String
-  categoryId String
+  brandId    Int
+  categoryId Int
   imageUrl   String?
 
   brand      Brand       @relation(fields: [brandId], references: [id])
@@ -100,35 +109,41 @@ model Product {
   comments   ProductComment[]
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  updatedAt DateTime @updatedAt
 }
 
+// =============================
+// Reviews
+// =============================
 model Review {
-  id        String @id @default(cuid())
+  id        Int      @id @default(autoincrement())
   rating    Int
   body      String
-  userId    String
-  productId String
+  userId    Int
+  productId Int
 
-  user    User    @relation(fields: [userId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  updatedAt DateTime @updatedAt
 }
 
+// =============================
+// Cart and Orders
+// =============================
 model Cart {
-  id     String     @id @default(cuid())
-  userId String     @unique
+  id     Int       @id @default(autoincrement())
+  userId Int       @unique
   items  CartItem[]
-  user   User       @relation(fields: [userId], references: [id])
+  user   User      @relation(fields: [userId], references: [id])
 }
 
 model CartItem {
-  id        String @id @default(cuid())
-  cartId    String
-  productId String
-  quantity  Int    @default(1)
+  id        Int     @id @default(autoincrement())
+  cartId    Int
+  productId Int
+  quantity  Int     @default(1)
 
   cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id])
@@ -137,22 +152,22 @@ model CartItem {
 }
 
 model Order {
-  id     String      @id @default(cuid())
-  userId String
+  id     Int       @id @default(autoincrement())
+  userId Int
   status OrderStatus @default(PENDING)
   total  Float
   user   User        @relation(fields: [userId], references: [id])
   items  OrderItem[]
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  updatedAt DateTime @updatedAt
 }
 
 model OrderItem {
-  id        String @id @default(cuid())
-  orderId   String
-  productId String
-  quantity  Int    @default(1)
+  id        Int     @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  quantity  Int     @default(1)
   unitPrice Float
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -160,12 +175,12 @@ model OrderItem {
 }
 
 model ProductComment {
-  id        String   @id @default(cuid())
-  productId String
-  userId    String
+  id        Int      @id @default(autoincrement())
+  productId Int
+  userId    Int
   body      String
   createdAt DateTime @default(now())
 
-  product Product @relation(fields: [productId], references: [id])
-  user    User    @relation(fields: [userId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
